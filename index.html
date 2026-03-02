@@ -497,15 +497,38 @@
             try {
                 const response = await fetch(CLOUD_URL);
                 if (response.ok) {
-                    const cloudData = await response.json();
+                    const cloudData = await response.json() || {weights:[],foods:[],exercises:[]};
                     const localData = getData();
-                    if (Object.keys(localData.weights).length === 0 && 
-                        localData.foods.length === 0 && localData.exercises.length === 0) {
-                        saveData(cloudData);
-                    }
+                    
+                    // 合并去重
+                    const merged = { weights: [], foods: [], exercises: [] };
+                    
+                    // 体重：按日期去重，后更新的优先
+                    const weightMap = new Map();
+                    [...(cloudData.weights||[]), ...localData.weights].forEach(w => {
+                        weightMap.set(w.date, w);
+                    });
+                    merged.weights = Array.from(weightMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+                    
+                    // 饮食：按日期去重
+                    const foodMap = new Map();
+                    [...(cloudData.foods||[]), ...localData.foods].forEach(f => {
+                        foodMap.set(f.date, f);
+                    });
+                    merged.foods = Array.from(foodMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+                    
+                    // 运动：按日期+类型去重
+                    const exerciseMap = new Map();
+                    [...(cloudData.exercises||[]), ...localData.exercises].forEach(e => {
+                        exerciseMap.set(e.date + '-' + e.type, e);
+                    });
+                    merged.exercises = Array.from(exerciseMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+                    
+                    saveData(merged);
+                    loadData(); // 刷新显示
                 }
             } catch(e) {
-                console.log('加载云端数据失败');
+                console.log('加载云端数据失败，使用本地数据');
             }
         }
         

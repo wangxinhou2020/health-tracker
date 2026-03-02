@@ -323,11 +323,19 @@
         
         <!-- 统计概览 -->
         <div class="card">
-            <h2>📊 本周概览</h2>
+            <h2>📊 全部记录</h2>
             <div class="stats">
                 <div class="stat-item weight">
                     <div class="stat-value" id="currentWeight">--</div>
                     <div class="stat-label">当前体重 (kg)</div>
+                </div>
+                <div class="stat-item weight">
+                    <div class="stat-value" id="startWeight">--</div>
+                    <div class="stat-label">起始体重 (kg)</div>
+                </div>
+                <div class="stat-item weight">
+                    <div class="stat-value" id="weightChange">--</div>
+                    <div class="stat-label">体重变化 (kg)</div>
                 </div>
                 <div class="stat-item food">
                     <div class="stat-value" id="foodDays">0</div>
@@ -337,9 +345,9 @@
                     <div class="stat-value" id="exerciseDays">0</div>
                     <div class="stat-label">运动记录天数</div>
                 </div>
-                <div class="stat-item weight">
+                <div class="stat-item exercise">
                     <div class="stat-value" id="totalExercise">0</div>
-                    <div class="stat-label">本周运动(分钟)</div>
+                    <div class="stat-label">总运动(分钟)</div>
                 </div>
             </div>
             <div class="charts-row">
@@ -583,9 +591,20 @@
         function updateStats(data) {
             // 体重
             if (data.weights.length > 0) {
-                document.getElementById('currentWeight').textContent = data.weights[data.weights.length - 1].weight;
+                const currentWeight = data.weights[data.weights.length - 1].weight;
+                const startWeight = data.weights[0].weight;
+                const change = (currentWeight - startWeight).toFixed(1);
+                
+                document.getElementById('currentWeight').textContent = currentWeight;
+                document.getElementById('startWeight').textContent = startWeight;
+                
+                const changeEl = document.getElementById('weightChange');
+                changeEl.textContent = (change > 0 ? '+' : '') + change;
+                changeEl.style.color = change > 0 ? '#ff6b6b' : '#2ed573';
             } else {
                 document.getElementById('currentWeight').textContent = '--';
+                document.getElementById('startWeight').textContent = '--';
+                document.getElementById('weightChange').textContent = '--';
             }
             
             // 饮食天数
@@ -594,11 +613,8 @@
             // 运动天数
             document.getElementById('exerciseDays').textContent = data.exercises.length;
             
-            // 本周运动总时长
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            const weekExercise = data.exercises.filter(e => new Date(e.date) >= oneWeekAgo);
-            const totalMinutes = weekExercise.reduce((sum, e) => sum + e.duration, 0);
+            // 总运动时长
+            const totalMinutes = data.exercises.reduce((sum, e) => sum + e.duration, 0);
             document.getElementById('totalExercise').textContent = totalMinutes;
         }
         
@@ -616,9 +632,8 @@
                 return;
             }
             
-            const recentWeights = weights.slice(-14);
-            const labels = recentWeights.map(w => w.date.slice(5));
-            const values = recentWeights.map(w => w.weight);
+            const labels = weights.map(w => w.date.slice(5));
+            const values = weights.map(w => w.weight);
             
             weightChart = new Chart(ctx, {
                 type: 'line',

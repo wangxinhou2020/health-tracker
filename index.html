@@ -364,6 +364,7 @@
         <div class="tab-nav">
             <button class="tab-btn active" onclick="showTab('record')">📝 记录</button>
             <button class="tab-btn" onclick="showTab('diary')">📅 日记</button>
+            <button class="tab-btn" onclick="showTab('backup')">💾 备份</button>
         </div>
         
         <!-- 记录页面 -->
@@ -453,9 +454,26 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 备份页面 -->
+        <div id="tab-backup" class="tab-content">
+            <div class="card">
+                <h2>💾 数据备份</h2>
+                <p style="margin-bottom: 15px; color: #666;">点击下方按钮导出数据，发给我帮你存到云端。换浏览器后可以导入恢复。</p>
+                <div class="form-group">
+                    <button class="btn" onclick="exportData()">📤 导出数据</button>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>导入数据（粘贴我给你的JSON）：</label>
+                    <textarea id="importData" placeholder="粘贴JSON数据"></textarea>
+                    <button class="btn" onclick="importData()" style="margin-top: 10px;">📥 导入数据</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        const CLOUD_URL = 'https://raw.githubusercontent.com/wangxinhou2020/health-tracker/main/data.json';
         let weightChart = null;
         let exerciseChart = null;
         
@@ -465,7 +483,7 @@
         document.getElementById('foodDate').valueAsDate = today;
         document.getElementById('exerciseDate').valueAsDate = today;
         
-        // 加载数据
+        // 加载本地数据
         loadData();
         
         function showTab(tab) {
@@ -474,6 +492,42 @@
             event.target.classList.add('active');
             document.getElementById('tab-' + tab).classList.add('active');
         }
+        
+        async function loadDataFromCloud() {
+            try {
+                const response = await fetch(CLOUD_URL);
+                if (response.ok) {
+                    const cloudData = await response.json();
+                    const localData = getData();
+                    if (Object.keys(localData.weights).length === 0 && 
+                        localData.foods.length === 0 && localData.exercises.length === 0) {
+                        saveData(cloudData);
+                    }
+                }
+            } catch(e) {
+                console.log('加载云端数据失败');
+            }
+        }
+        
+        function exportData() {
+            const data = getData();
+            const jsonStr = JSON.stringify(data, null, 2);
+            prompt('复制以下数据发给我：', jsonStr);
+        }
+        
+        function importData() {
+            const jsonStr = document.getElementById('importData').value;
+            if (!jsonStr) { alert('请粘贴数据'); return; }
+            try {
+                const data = JSON.parse(jsonStr);
+                saveData(data);
+                loadData();
+                alert('导入成功！');
+            } catch(e) { alert('数据格式错误'); }
+        }
+        
+        // 页面加载时尝试从云端同步
+        loadDataFromCloud();
         
         function getData() {
             const data = localStorage.getItem('healthTrackerData');

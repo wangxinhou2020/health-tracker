@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康追踪 - 体重饮食运动记录</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #ff6b6b;
+            --secondary: #4ecdc4;
+            --dark: #2d3436;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--dark);
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, #fef9e7 0%, #fffef5 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .record-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .record-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .record-date {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .record-detail {
+            color: #555;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+        
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5em; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏃 健康追踪器</h1>
+        
+        <!-- 体重记录 -->
+        <div class="card">
+            <h2>📝 记录体重</h2>
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" id="weightDate">
+            </div>
+            <div class="form-group">
+                <label>体重 (kg)</label>
+                <input type="number" id="weightValue" step="0.1" placeholder="例如: 70.5">
+            </div>
+            <button class="btn" onclick="addWeight()">保存体重</button>
+        </div>
+        
+        <!-- 体重图表 -->
+        <div class="card">
+            <h2>📊 体重变化趋势</h2>
+            <div class="stats" id="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="currentWeight">--</div>
+                    <div class="stat-label">当前体重 (kg)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="startWeight">--</div>
+                    <div class="stat-label">起始体重 (kg)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="changeWeight">--</div>
+                    <div class="stat-label">变化 (kg)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="recordCount">0</div>
+                    <div class="stat-label">记录天数</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- 饮食记录 -->
+        <div class="card">
+            <h2>🍱 饮食记录</h2>
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" id="foodDate">
+            </div>
+            <div class="form-group">
+                <label>早餐</label>
+                <textarea id="breakfast" placeholder="例如: 豆浆+油条"></textarea>
+            </div>
+            <div class="form-group">
+                <label>午餐</label>
+                <textarea id="lunch" placeholder="例如: 米饭+红烧肉+青菜"></textarea>
+            </div>
+            <div class="form-group">
+                <label>晚餐</label>
+                <textarea id="dinner" placeholder="例如: 沙拉+鸡胸肉"></textarea>
+            </div>
+            <div class="form-group">
+                <label>零食/其他</label>
+                <textarea id="snacks" placeholder="例如: 苹果一个"></textarea>
+            </div>
+            <button class="btn" onclick="addFood()">保存饮食</button>
+        </div>
+        
+        <!-- 运动记录 -->
+        <div class="card">
+            <h2>💪 运动记录</h2>
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" id="exerciseDate">
+            </div>
+            <div class="form-group">
+                <label>运动类型</label>
+                <select id="exerciseType">
+                    <option value="跑步">跑步</option>
+                    <option value="游泳">游泳</option>
+                    <option value="骑行">骑行</option>
+                    <option value="健身">健身</option>
+                    <option value="瑜伽">瑜伽</option>
+                    <option value="篮球">篮球</option>
+                    <option value="足球">足球</option>
+                    <option value="羽毛球">羽毛球</option>
+                    <option value="走路">走路</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>时长 (分钟)</label>
+                <input type="number" id="exerciseDuration" placeholder="例如: 30">
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="exerciseNote" placeholder="例如: 5公里，轻松慢跑"></textarea>
+            </div>
+            <button class="btn" onclick="addExercise()">保存运动</button>
+        </div>
+        
+        <!-- 历史记录 -->
+        <div class="card">
+            <h2>📅 历史记录</h2>
+            <div class="record-list" id="recordList">
+                <div class="empty-state">暂无记录</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化
+        let weightChart = null;
+        
+        // 设置默认日期为今天
+        document.getElementById('weightDate').valueAsDate = new Date();
+        document.getElementById('foodDate').valueAsDate = new Date();
+        document.getElementById('exerciseDate').valueAsDate = new Date();
+        
+        // 加载数据
+        loadData();
+        
+        function getData() {
+            const data = localStorage.getItem('healthTrackerData');
+            return data ? JSON.parse(data) : { weights: [], foods: [], exercises: [] };
+        }
+        
+        function saveData(data) {
+            localStorage.setItem('healthTrackerData', JSON.stringify(data));
+        }
+        
+        function addWeight() {
+            const date = document.getElementById('weightDate').value;
+            const weight = parseFloat(document.getElementById('weightValue').value);
+            
+            if (!date || !weight) {
+                alert('请填写日期和体重');
+                return;
+            }
+            
+            const data = getData();
+            const existingIndex = data.weights.findIndex(w => w.date === date);
+            
+            if (existingIndex >= 0) {
+                data.weights[existingIndex].weight = weight;
+            } else {
+                data.weights.push({ date, weight });
+            }
+            
+            data.weights.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveData(data);
+            
+            document.getElementById('weightValue').value = '';
+            loadData();
+            alert('体重记录成功！');
+        }
+        
+        function addFood() {
+            const date = document.getElementById('foodDate').value;
+            const breakfast = document.getElementById('breakfast').value;
+            const lunch = document.getElementById('lunch').value;
+            const dinner = document.getElementById('dinner').value;
+            const snacks = document.getElementById('snacks').value;
+            
+            if (!date) {
+                alert('请选择日期');
+                return;
+            }
+            
+            if (!breakfast && !lunch && !dinner && !snacks) {
+                alert('请至少填写一项饮食');
+                return;
+            }
+            
+            const data = getData();
+            const existingIndex = data.foods.findIndex(f => f.date === date);
+            
+            const foodRecord = { date, breakfast, lunch, dinner, snacks };
+            
+            if (existingIndex >= 0) {
+                data.foods[existingIndex] = foodRecord;
+            } else {
+                data.foods.push(foodRecord);
+            }
+            
+            data.foods.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveData(data);
+            
+            document.getElementById('breakfast').value = '';
+            document.getElementById('lunch').value = '';
+            document.getElementById('dinner').value = '';
+            document.getElementById('snacks').value = '';
+            loadData();
+            alert('饮食记录成功！');
+        }
+        
+        function addExercise() {
+            const date = document.getElementById('exerciseDate').value;
+            const type = document.getElementById('exerciseType').value;
+            const duration = parseInt(document.getElementById('exerciseDuration').value);
+            const note = document.getElementById('exerciseNote').value;
+            
+            if (!date || !duration) {
+                alert('请填写日期和运动时长');
+                return;
+            }
+            
+            const data = getData();
+            data.exercises.push({ date, type, duration, note });
+            data.exercises.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveData(data);
+            
+            document.getElementById('exerciseDuration').value = '';
+            document.getElementById('exerciseNote').value = '';
+            loadData();
+            alert('运动记录成功！');
+        }
+        
+        function deleteRecord(type, index) {
+            if (!confirm('确定要删除这条记录吗？')) return;
+            
+            const data = getData();
+            data[type].splice(index, 1);
+            saveData(data);
+            loadData();
+        }
+        
+        function loadData() {
+            const data = getData();
+            
+            // 更新统计数据
+            updateStats(data.weights);
+            
+            // 更新图表
+            updateChart(data.weights);
+            
+            // 更新历史记录
+            updateRecordList(data);
+        }
+        
+        function updateStats(weights) {
+            if (weights.length === 0) {
+                document.getElementById('currentWeight').textContent = '--';
+                document.getElementById('startWeight').textContent = '--';
+                document.getElementById('changeWeight').textContent = '--';
+                document.getElementById('recordCount').textContent = '0';
+                return;
+            }
+            
+            const current = weights[weights.length - 1].weight;
+            const start = weights[0].weight;
+            const change = (current - start).toFixed(1);
+            
+            document.getElementById('currentWeight').textContent = current;
+            document.getElementById('startWeight').textContent = start;
+            document.getElementById('changeWeight').textContent = (change > 0 ? '+' : '') + change;
+            document.getElementById('changeWeight').style.color = change > 0 ? '#ff6b6b' : '#4ecdc4';
+            document.getElementById('recordCount').textContent = weights.length;
+        }
+        
+        function updateChart(weights) {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            
+            if (weightChart) {
+                weightChart.destroy();
+            }
+            
+            if (weights.length === 0) {
+                return;
+            }
+            
+            const labels = weights.map(w => w.date.slice(5));
+            const values = weights.map(w => w.weight);
+            
+            weightChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '体重 (kg)',
+                        data: values,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#ff6b6b',
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: '体重 (kg)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateRecordList(data) {
+            const container = document.getElementById('recordList');
+            const allRecords = [];
+            
+            // 合并所有记录
+            data.weights.forEach((w, i) => {
+                allRecords.push({ type: 'weight', date: w.date, data: w, index: i });
+            });
+            data.foods.forEach((f, i) => {
+                allRecords.push({ type: 'food', date: f.date, data: f, index: i });
+            });
+            data.exercises.forEach((e, i) => {
+                allRecords.push({ type: 'exercise', date: e.date, data: e, index: i });
+            });
+            
+            // 按日期排序
+            allRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (allRecords.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无记录</div>';
+                return;
+            }
+            
+            container.innerHTML = allRecords.map(record => {
+                let content = '';
+                const dateStr = new Date(record.date).toLocaleDateString('zh-CN', { 
+                    year: 'numeric', month: 'short', day: 'numeric' 
+                });
+                
+                if (record.type === 'weight') {
+                    content = `
+                        <div class="record-detail">🏃 体重: <strong>${record.data.weight} kg</strong></div>
+                        <button class="delete-btn" onclick="deleteRecord('weights', ${record.index})">删除</button>
+                    `;
+                } else if (record.type === 'food') {
+                    const meals = [];
+                    if (record.data.breakfast) meals.push(`🥣 早餐: ${record.data.breakfast}`);
+                    if (record.data.lunch) meals.push(`🍱 午餐: ${record.data.lunch}`);
+                    if (record.data.dinner) meals.push(`🍜 晚餐: ${record.data.dinner}`);
+                    if (record.data.snacks) meals.push(`🍪 零食: ${record.data.snacks}`);
+                    content = `
+                        <div class="record-detail">${meals.join('<br>')}</div>
+                        <button class="delete-btn" onclick="deleteRecord('foods', ${record.index})">删除</button>
+                    `;
+                } else if (record.type === 'exercise') {
+                    content = `
+                        <div class="record-detail">💪 ${record.data.type} - ${record.data.duration}分钟</div>
+                        ${record.data.note ? `<div class="record-detail" style="color:#888">${record.data.note}</div>` : ''}
+                        <button class="delete-btn" onclick="deleteRecord('exercises', ${record.index})">删除</button>
+                    `;
+                }
+                
+                return `
+                    <div class="record-item">
+                        <div class="record-date">📅 ${dateStr}</div>
+                        ${content}
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>

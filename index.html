@@ -512,7 +512,26 @@
         function exportData() {
             const data = getData();
             const jsonStr = JSON.stringify(data, null, 2);
-            alert('请复制以下数据，直接发给我，我帮你存到云端：\n\n' + jsonStr);
+            // 创建可复制的文本框
+            let container = document.getElementById('exportContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'exportContainer';
+                container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                container.onclick = function(e) { if(e.target===container) container.style.display='none'; };
+                document.body.appendChild(container);
+            }
+            container.innerHTML = `
+                <div style="background:white;padding:30px;border-radius:15px;max-width:600px;width:90%;max-height:80vh;overflow:auto;">
+                    <h3 style="margin-bottom:15px;">📤 导出数据 - 复制下方内容发给我</h3>
+                    <textarea id="exportText" style="width:100%;height:300px;font-size:12px;font-family:monospace;">${jsonStr}</textarea>
+                    <div style="margin-top:15px;text-align:right;">
+                        <button onclick="document.getElementById('exportText').select();document.execCommand('copy');alert('已复制！')" class="btn">📋 一键复制</button>
+                        <button onclick="document.getElementById('exportContainer').style.display='none'" class="btn" style="background:#666;margin-left:10px;">关闭</button>
+                    </div>
+                </div>
+            `;
+            container.style.display = 'flex';
         }
         
         function importData() {

@@ -512,7 +512,7 @@
         function exportData() {
             const data = getData();
             const jsonStr = JSON.stringify(data, null, 2);
-            prompt('复制以下数据发给我：', jsonStr);
+            alert('请复制以下数据，直接发给我，我帮你存到云端：\n\n' + jsonStr);
         }
         
         function importData() {

@@ -11,6 +11,9 @@
             --secondary: #4ecdc4;
             --dark: #2d3436;
             --light: #f8f9fa;
+            --orange: #ffa502;
+            --green: #2ed573;
+            --purple: #5352ed;
         }
         
         * {
@@ -55,6 +58,12 @@
             display: inline-block;
         }
         
+        h3 {
+            color: var(--dark);
+            margin: 15px 0 10px;
+            font-size: 1.1em;
+        }
+        
         .form-group {
             margin-bottom: 15px;
         }
@@ -82,7 +91,7 @@
         
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 60px;
         }
         
         .btn {
@@ -101,6 +110,16 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
+        .btn-small {
+            padding: 8px 20px;
+            font-size: 0.9em;
+        }
+        
+        .btn-danger {
+            background: #ff4757;
+        }
+        
+        /* 统计卡片 */
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -109,47 +128,131 @@
         }
         
         .stat-item {
-            background: linear-gradient(135deg, #fef9e7 0%, #fffef5 100%);
             padding: 20px;
             border-radius: 15px;
             text-align: center;
         }
         
+        .stat-item.weight { background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); }
+        .stat-item.food { background: linear-gradient(135deg, #fab1a0 0%, #e17055 100%); }
+        .stat-item.exercise { background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%); }
+        
         .stat-value {
             font-size: 1.8em;
             font-weight: bold;
-            color: var(--primary);
+            color: white;
         }
         
         .stat-label {
-            color: #666;
-            font-size: 0.9em;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.85em;
             margin-top: 5px;
         }
         
-        .record-list {
-            max-height: 400px;
-            overflow-y: auto;
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            height: 280px;
+            margin-top: 20px;
         }
         
-        .record-item {
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 700px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-small {
+            height: 200px;
+        }
+        
+        /* 每日日记 */
+        .diary-day {
             background: #f8f9fa;
-            padding: 15px;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .diary-day.food-day { border-left-color: var(--orange); }
+        .diary-day.exercise-day { border-left-color: var(--green); }
+        
+        .diary-date {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .diary-section {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: white;
             border-radius: 10px;
-            margin-bottom: 10px;
-            border-left: 4px solid var(--secondary);
         }
         
-        .record-date {
-            color: var(--primary);
+        .diary-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .diary-label {
             font-weight: 600;
-            margin-bottom: 8px;
+            font-size: 0.9em;
+            margin-bottom: 5px;
         }
         
-        .record-detail {
+        .diary-label.weight-label { color: var(--primary); }
+        .diary-label.food-label { color: var(--orange); }
+        .diary-label.exercise-label { color: var(--green); }
+        
+        .diary-content {
             color: #555;
-            margin: 5px 0;
             font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .diary-meal {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        
+        .diary-meal:last-child {
+            margin-bottom: 0;
+        }
+        
+        .meal-name {
+            width: 50px;
+            color: #888;
+            font-size: 0.85em;
+        }
+        
+        .exercise-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .exercise-item:last-child {
+            border-bottom: none;
+        }
+        
+        .exercise-type {
+            font-weight: 600;
+        }
+        
+        .exercise-duration {
+            color: var(--green);
         }
         
         .delete-btn {
@@ -159,20 +262,53 @@
             padding: 5px 15px;
             border-radius: 15px;
             cursor: pointer;
-            font-size: 0.85em;
-            margin-top: 10px;
+            font-size: 0.8em;
         }
         
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 20px;
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
         }
         
         .empty-state {
             text-align: center;
             color: #999;
-            padding: 40px;
+            padding: 30px;
+        }
+        
+        .weight-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 3px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            margin-left: 10px;
         }
         
         @media (max-width: 600px) {
@@ -185,125 +321,149 @@
     <div class="container">
         <h1>🏃 健康追踪器</h1>
         
-        <!-- 体重记录 -->
+        <!-- 统计概览 -->
         <div class="card">
-            <h2>📝 记录体重</h2>
-            <div class="form-group">
-                <label>日期</label>
-                <input type="date" id="weightDate">
-            </div>
-            <div class="form-group">
-                <label>体重 (kg)</label>
-                <input type="number" id="weightValue" step="0.1" placeholder="例如: 70.5">
-            </div>
-            <button class="btn" onclick="addWeight()">保存体重</button>
-        </div>
-        
-        <!-- 体重图表 -->
-        <div class="card">
-            <h2>📊 体重变化趋势</h2>
-            <div class="stats" id="stats">
-                <div class="stat-item">
+            <h2>📊 本周概览</h2>
+            <div class="stats">
+                <div class="stat-item weight">
                     <div class="stat-value" id="currentWeight">--</div>
                     <div class="stat-label">当前体重 (kg)</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="startWeight">--</div>
-                    <div class="stat-label">起始体重 (kg)</div>
+                <div class="stat-item food">
+                    <div class="stat-value" id="foodDays">0</div>
+                    <div class="stat-label">饮食记录天数</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="changeWeight">--</div>
-                    <div class="stat-label">变化 (kg)</div>
+                <div class="stat-item exercise">
+                    <div class="stat-value" id="exerciseDays">0</div>
+                    <div class="stat-label">运动记录天数</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="recordCount">0</div>
-                    <div class="stat-label">记录天数</div>
+                <div class="stat-item weight">
+                    <div class="stat-value" id="totalExercise">0</div>
+                    <div class="stat-label">本周运动(分钟)</div>
                 </div>
             </div>
-            <div class="chart-container">
-                <canvas id="weightChart"></canvas>
+            <div class="charts-row">
+                <div class="chart-container chart-small">
+                    <canvas id="weightChart"></canvas>
+                </div>
+                <div class="chart-container chart-small">
+                    <canvas id="exerciseChart"></canvas>
+                </div>
             </div>
         </div>
         
-        <!-- 饮食记录 -->
-        <div class="card">
-            <h2>🍱 饮食记录</h2>
-            <div class="form-group">
-                <label>日期</label>
-                <input type="date" id="foodDate">
-            </div>
-            <div class="form-group">
-                <label>早餐</label>
-                <textarea id="breakfast" placeholder="例如: 豆浆+油条"></textarea>
-            </div>
-            <div class="form-group">
-                <label>午餐</label>
-                <textarea id="lunch" placeholder="例如: 米饭+红烧肉+青菜"></textarea>
-            </div>
-            <div class="form-group">
-                <label>晚餐</label>
-                <textarea id="dinner" placeholder="例如: 沙拉+鸡胸肉"></textarea>
-            </div>
-            <div class="form-group">
-                <label>零食/其他</label>
-                <textarea id="snacks" placeholder="例如: 苹果一个"></textarea>
-            </div>
-            <button class="btn" onclick="addFood()">保存饮食</button>
+        <!-- 标签页导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="showTab('record')">📝 记录</button>
+            <button class="tab-btn" onclick="showTab('diary')">📅 日记</button>
         </div>
         
-        <!-- 运动记录 -->
-        <div class="card">
-            <h2>💪 运动记录</h2>
-            <div class="form-group">
-                <label>日期</label>
-                <input type="date" id="exerciseDate">
+        <!-- 记录页面 -->
+        <div id="tab-record" class="tab-content active">
+            <!-- 体重记录 -->
+            <div class="card">
+                <h2>⚖️ 记录体重</h2>
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="weightDate">
+                </div>
+                <div class="form-group">
+                    <label>体重 (kg)</label>
+                    <input type="number" id="weightValue" step="0.1" placeholder="例如: 70.5">
+                </div>
+                <button class="btn" onclick="addWeight()">保存体重</button>
             </div>
-            <div class="form-group">
-                <label>运动类型</label>
-                <select id="exerciseType">
-                    <option value="跑步">跑步</option>
-                    <option value="游泳">游泳</option>
-                    <option value="骑行">骑行</option>
-                    <option value="健身">健身</option>
-                    <option value="瑜伽">瑜伽</option>
-                    <option value="篮球">篮球</option>
-                    <option value="足球">足球</option>
-                    <option value="羽毛球">羽毛球</option>
-                    <option value="走路">走路</option>
-                    <option value="其他">其他</option>
-                </select>
+            
+            <!-- 饮食记录 -->
+            <div class="card">
+                <h2>🍱 记录饮食</h2>
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="foodDate">
+                </div>
+                <div class="form-group">
+                    <label>早餐</label>
+                    <textarea id="breakfast" placeholder="例如: 豆浆+油条"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>午餐</label>
+                    <textarea id="lunch" placeholder="例如: 米饭+红烧肉+青菜"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>晚餐</label>
+                    <textarea id="dinner" placeholder="例如: 沙拉+鸡胸肉"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>零食/其他</label>
+                    <textarea id="snacks" placeholder="例如: 苹果一个"></textarea>
+                </div>
+                <button class="btn" onclick="addFood()">保存饮食</button>
             </div>
-            <div class="form-group">
-                <label>时长 (分钟)</label>
-                <input type="number" id="exerciseDuration" placeholder="例如: 30">
+            
+            <!-- 运动记录 -->
+            <div class="card">
+                <h2>💪 记录运动</h2>
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="exerciseDate">
+                </div>
+                <div class="form-group">
+                    <label>运动类型</label>
+                    <select id="exerciseType">
+                        <option value="跑步">🏃 跑步</option>
+                        <option value="游泳">🏊 游泳</option>
+                        <option value="骑行">🚴 骑行</option>
+                        <option value="健身">🏋️ 健身</option>
+                        <option value="瑜伽">🧘 瑜伽</option>
+                        <option value="篮球">🏀 篮球</option>
+                        <option value="足球">⚽ 足球</option>
+                        <option value="羽毛球">🏸 羽毛球</option>
+                        <option value="走路">🚶 走路</option>
+                        <option value="其他">🎯 其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>时长 (分钟)</label>
+                    <input type="number" id="exerciseDuration" placeholder="例如: 30">
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea id="exerciseNote" placeholder="例如: 5公里，轻松慢跑"></textarea>
+                </div>
+                <button class="btn" onclick="addExercise()">保存运动</button>
             </div>
-            <div class="form-group">
-                <label>备注</label>
-                <textarea id="exerciseNote" placeholder="例如: 5公里，轻松慢跑"></textarea>
-            </div>
-            <button class="btn" onclick="addExercise()">保存运动</button>
         </div>
         
-        <!-- 历史记录 -->
-        <div class="card">
-            <h2>📅 历史记录</h2>
-            <div class="record-list" id="recordList">
-                <div class="empty-state">暂无记录</div>
+        <!-- 日记页面 -->
+        <div id="tab-diary" class="tab-content">
+            <div class="card">
+                <h2>📅 健康日记</h2>
+                <div id="diaryList">
+                    <div class="empty-state">暂无记录，开始记录你的健康生活吧！</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 初始化
         let weightChart = null;
+        let exerciseChart = null;
         
-        // 设置默认日期为今天
-        document.getElementById('weightDate').valueAsDate = new Date();
-        document.getElementById('foodDate').valueAsDate = new Date();
-        document.getElementById('exerciseDate').valueAsDate = new Date();
+        // 初始化日期
+        const today = new Date();
+        document.getElementById('weightDate').valueAsDate = today;
+        document.getElementById('foodDate').valueAsDate = today;
+        document.getElementById('exerciseDate').valueAsDate = today;
         
         // 加载数据
         loadData();
+        
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
         
         function getData() {
             const data = localStorage.getItem('healthTrackerData');
@@ -412,38 +572,35 @@
         
         function loadData() {
             const data = getData();
-            
-            // 更新统计数据
-            updateStats(data.weights);
-            
-            // 更新图表
-            updateChart(data.weights);
-            
-            // 更新历史记录
-            updateRecordList(data);
+            updateStats(data);
+            updateWeightChart(data.weights);
+            updateExerciseChart(data.exercises);
+            updateDiary(data);
         }
         
-        function updateStats(weights) {
-            if (weights.length === 0) {
+        function updateStats(data) {
+            // 体重
+            if (data.weights.length > 0) {
+                document.getElementById('currentWeight').textContent = data.weights[data.weights.length - 1].weight;
+            } else {
                 document.getElementById('currentWeight').textContent = '--';
-                document.getElementById('startWeight').textContent = '--';
-                document.getElementById('changeWeight').textContent = '--';
-                document.getElementById('recordCount').textContent = '0';
-                return;
             }
             
-            const current = weights[weights.length - 1].weight;
-            const start = weights[0].weight;
-            const change = (current - start).toFixed(1);
+            // 饮食天数
+            document.getElementById('foodDays').textContent = data.foods.length;
             
-            document.getElementById('currentWeight').textContent = current;
-            document.getElementById('startWeight').textContent = start;
-            document.getElementById('changeWeight').textContent = (change > 0 ? '+' : '') + change;
-            document.getElementById('changeWeight').style.color = change > 0 ? '#ff6b6b' : '#4ecdc4';
-            document.getElementById('recordCount').textContent = weights.length;
+            // 运动天数
+            document.getElementById('exerciseDays').textContent = data.exercises.length;
+            
+            // 本周运动总时长
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const weekExercise = data.exercises.filter(e => new Date(e.date) >= oneWeekAgo);
+            const totalMinutes = weekExercise.reduce((sum, e) => sum + e.duration, 0);
+            document.getElementById('totalExercise').textContent = totalMinutes;
         }
         
-        function updateChart(weights) {
+        function updateWeightChart(weights) {
             const ctx = document.getElementById('weightChart').getContext('2d');
             
             if (weightChart) {
@@ -451,11 +608,15 @@
             }
             
             if (weights.length === 0) {
+                ctx.fillStyle = '#999';
+                ctx.font = '14px sans-serif';
+                ctx.fillText('暂无体重数据', 80, 100);
                 return;
             }
             
-            const labels = weights.map(w => w.date.slice(5));
-            const values = weights.map(w => w.weight);
+            const recentWeights = weights.slice(-14);
+            const labels = recentWeights.map(w => w.date.slice(5));
+            const values = recentWeights.map(w => w.weight);
             
             weightChart = new Chart(ctx, {
                 type: 'line',
@@ -469,88 +630,143 @@
                         fill: true,
                         tension: 0.4,
                         pointBackgroundColor: '#ff6b6b',
-                        pointRadius: 5,
-                        pointHoverRadius: 8
+                        pointRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
+                        legend: { display: false },
+                        title: { display: true, text: '体重趋势' }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: false,
-                            title: {
-                                display: true,
-                                text: '体重 (kg)'
-                            }
-                        }
+                        y: { title: { display: true, text: 'kg' } }
                     }
                 }
             });
         }
         
-        function updateRecordList(data) {
-            const container = document.getElementById('recordList');
-            const allRecords = [];
+        function updateExerciseChart(exercises) {
+            const ctx = document.getElementById('exerciseChart').getContext('2d');
             
-            // 合并所有记录
-            data.weights.forEach((w, i) => {
-                allRecords.push({ type: 'weight', date: w.date, data: w, index: i });
-            });
-            data.foods.forEach((f, i) => {
-                allRecords.push({ type: 'food', date: f.date, data: f, index: i });
-            });
-            data.exercises.forEach((e, i) => {
-                allRecords.push({ type: 'exercise', date: e.date, data: e, index: i });
-            });
+            if (exerciseChart) {
+                exerciseChart.destroy();
+            }
             
-            // 按日期排序
-            allRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            if (allRecords.length === 0) {
-                container.innerHTML = '<div class="empty-state">暂无记录</div>';
+            if (exercises.length === 0) {
+                ctx.fillStyle = '#999';
+                ctx.font = '14px sans-serif';
+                ctx.fillText('暂无运动数据', 80, 100);
                 return;
             }
             
-            container.innerHTML = allRecords.map(record => {
-                let content = '';
-                const dateStr = new Date(record.date).toLocaleDateString('zh-CN', { 
-                    year: 'numeric', month: 'short', day: 'numeric' 
+            // 统计运动类型
+            const typeStats = {};
+            exercises.forEach(e => {
+                typeStats[e.type] = (typeStats[e.type] || 0) + e.duration;
+            });
+            
+            const colors = ['#ff6b6b', '#4ecdc4', '#ffa502', '#2ed573', '#5352ed', '#ff4757', '#1e90ff', '#e84393', '#00cec9', '#6c5ce7'];
+            const labels = Object.keys(typeStats);
+            const data = Object.values(typeStats);
+            
+            exerciseChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'right',
+                            labels: { boxWidth: 12 }
+                        },
+                        title: { display: true, text: '运动类型分布' }
+                    }
+                }
+            });
+        }
+        
+        function updateDiary(data) {
+            const container = document.getElementById('diaryList');
+            
+            // 合并所有日期
+            const allDates = new Set();
+            data.weights.forEach(w => allDates.add(w.date));
+            data.foods.forEach(f => allDates.add(f.date));
+            data.exercises.forEach(e => allDates.add(e.date));
+            
+            const sortedDates = Array.from(allDates).sort((a, b) => new Date(b) - new Date(a));
+            
+            if (sortedDates.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无记录，开始记录你的健康生活吧！</div>';
+                return;
+            }
+            
+            container.innerHTML = sortedDates.slice(0, 30).map(date => {
+                const weight = data.weights.find(w => w.date === date);
+                const food = data.foods.find(f => f.date === date);
+                const dayExercises = data.exercises.filter(e => e.date === date);
+                
+                const dateStr = new Date(date).toLocaleDateString('zh-CN', { 
+                    weekday: 'short', month: 'short', day: 'numeric' 
                 });
                 
-                if (record.type === 'weight') {
-                    content = `
-                        <div class="record-detail">🏃 体重: <strong>${record.data.weight} kg</strong></div>
-                        <button class="delete-btn" onclick="deleteRecord('weights', ${record.index})">删除</button>
+                let sections = '';
+                
+                if (weight) {
+                    sections += `
+                        <div class="diary-section">
+                            <div class="diary-label weight-label">⚖️ 体重</div>
+                            <div class="diary-content">${weight.weight} kg</div>
+                        </div>
                     `;
-                } else if (record.type === 'food') {
-                    const meals = [];
-                    if (record.data.breakfast) meals.push(`🥣 早餐: ${record.data.breakfast}`);
-                    if (record.data.lunch) meals.push(`🍱 午餐: ${record.data.lunch}`);
-                    if (record.data.dinner) meals.push(`🍜 晚餐: ${record.data.dinner}`);
-                    if (record.data.snacks) meals.push(`🍪 零食: ${record.data.snacks}`);
-                    content = `
-                        <div class="record-detail">${meals.join('<br>')}</div>
-                        <button class="delete-btn" onclick="deleteRecord('foods', ${record.index})">删除</button>
+                }
+                
+                if (food && (food.breakfast || food.lunch || food.dinner || food.snacks)) {
+                    let mealsHtml = '';
+                    if (food.breakfast) mealsHtml += `<div class="diary-meal"><span class="meal-name">🥣 早餐</span><span>${food.breakfast}</span></div>`;
+                    if (food.lunch) mealsHtml += `<div class="diary-meal"><span class="meal-name">🍱 午餐</span><span>${food.lunch}</span></div>`;
+                    if (food.dinner) mealsHtml += `<div class="diary-meal"><span class="meal-name">🍜 晚餐</span><span>${food.dinner}</span></div>`;
+                    if (food.snacks) mealsHtml += `<div class="diary-meal"><span class="meal-name">🍪 零食</span><span>${food.snacks}</span></div>`;
+                    
+                    sections += `
+                        <div class="diary-section">
+                            <div class="diary-label food-label">🍱 饮食</div>
+                            <div class="diary-content">${mealsHtml}</div>
+                        </div>
                     `;
-                } else if (record.type === 'exercise') {
-                    content = `
-                        <div class="record-detail">💪 ${record.data.type} - ${record.data.duration}分钟</div>
-                        ${record.data.note ? `<div class="record-detail" style="color:#888">${record.data.note}</div>` : ''}
-                        <button class="delete-btn" onclick="deleteRecord('exercises', ${record.index})">删除</button>
+                }
+                
+                if (dayExercises.length > 0) {
+                    const exercisesHtml = dayExercises.map(e => `
+                        <div class="exercise-item">
+                            <span class="exercise-type">${e.type}</span>
+                            <span class="exercise-duration">${e.duration}分钟</span>
+                        </div>
+                    `).join('');
+                    
+                    sections += `
+                        <div class="diary-section">
+                            <div class="diary-label exercise-label">💪 运动</div>
+                            <div class="diary-content">${exercisesHtml}</div>
+                        </div>
                     `;
                 }
                 
                 return `
-                    <div class="record-item">
-                        <div class="record-date">📅 ${dateStr}</div>
-                        ${content}
+                    <div class="diary-day">
+                        <div class="diary-date">
+                            📅 ${dateStr}
+                        </div>
+                        ${sections}
                     </div>
                 `;
             }).join('');

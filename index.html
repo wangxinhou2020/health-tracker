@@ -495,40 +495,56 @@
         
         async function loadDataFromCloud() {
             try {
+                console.log('开始加载云端数据...');
                 const response = await fetch(CLOUD_URL);
-                if (response.ok) {
-                    const cloudData = await response.json() || {weights:[],foods:[],exercises:[]};
-                    const localData = getData();
-                    
-                    // 合并去重
-                    const merged = { weights: [], foods: [], exercises: [] };
-                    
-                    // 体重：按日期去重，后更新的优先
-                    const weightMap = new Map();
-                    [...(cloudData.weights||[]), ...localData.weights].forEach(w => {
-                        weightMap.set(w.date, w);
-                    });
-                    merged.weights = Array.from(weightMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
-                    
-                    // 饮食：按日期去重
-                    const foodMap = new Map();
-                    [...(cloudData.foods||[]), ...localData.foods].forEach(f => {
-                        foodMap.set(f.date, f);
-                    });
-                    merged.foods = Array.from(foodMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
-                    
-                    // 运动：按日期+类型去重
-                    const exerciseMap = new Map();
-                    [...(cloudData.exercises||[]), ...localData.exercises].forEach(e => {
-                        exerciseMap.set(e.date + '-' + e.type, e);
-                    });
-                    merged.exercises = Array.from(exerciseMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
-                    
-                    saveData(merged);
-                    loadData(); // 刷新显示
+                console.log('响应状态:', response.status);
+                
+                if (!response.ok) {
+                    console.log('云端响应失败，使用本地数据');
+                    return;
                 }
+                
+                const cloudData = await response.json();
+                console.log('云端数据加载成功:', cloudData);
+                
+                if (!cloudData || !Array.isArray(cloudData.weights)) {
+                    console.log('云端数据格式错误，使用空数据');
+                    cloudData = {weights:[],foods:[],exercises:[]};
+                }
+                
+                const localData = getData();
+                console.log('本地数据:', localData);
+                
+                // 合并去重
+                const merged = { weights: [], foods: [], exercises: [] };
+                
+                // 体重：按日期去重，后更新的优先
+                const weightMap = new Map();
+                [...(cloudData.weights||[]), ...localData.weights].forEach(w => {
+                    weightMap.set(w.date, w);
+                });
+                merged.weights = Array.from(weightMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+                
+                // 饮食：按日期去重
+                const foodMap = new Map();
+                [...(cloudData.foods||[]), ...localData.foods].forEach(f => {
+                    foodMap.set(f.date, f);
+                });
+                merged.foods = Array.from(foodMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+                
+                // 运动：按日期+类型去重
+                const exerciseMap = new Map();
+                [...(cloudData.exercises||[]), ...localData.exercises].forEach(e => {
+                    exerciseMap.set(e.date + '-' + e.type, e);
+                });
+                merged.exercises = Array.from(exerciseMap.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+                
+                console.log('合并后数据:', merged);
+                saveData(merged);
+                loadData(); // 刷新显示
             } catch(e) {
-                console.log('加载云端数据失败，使用本地数据');
+                console.log('加载云端数据失败，使用本地数据', e);
+                loadData(); // 即使失败也加载本地数据
             }
         }
         

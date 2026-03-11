@@ -483,33 +483,65 @@
         document.getElementById('foodDate').valueAsDate = today;
         document.getElementById('exerciseDate').valueAsDate = today;
         
-        // 加载本地数据
-        loadData();
-        
-        function showTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('tab-' + tab).classList.add('active');
+        // 显示加载状态
+        function showLoadingStatus(message) {
+            const status = document.createElement('div');
+            status.id = 'loadingStatus';
+            status.style.cssText = 'position:fixed;top:10px;right:10px;background:#4ecdc4;color:white;padding:10px 20px;border-radius:20px;z-index:9999;box-shadow:0 2px10px rgba(0,0,0,0.2);';
+            status.textContent = message;
+            document.body.appendChild(status);
+            setTimeout(() => { status.remove(); }, 3000);
         }
         
-        async function loadDataFromCloud() {
+        // 显示错误状态
+        function showErrorStatus(message) {
+            const status = document.createElement('div');
+            status.id = 'errorStatus';
+            status.style.cssText = 'position:fixed;top:10px;right:10px;background:#ff6b6b;color:white;padding:10px 20px;border-radius:20px;z-index:9999;box-shadow:0 2px10px rgba(0,0,0,0.2);';
+            status.textContent = message;
+            document.body.appendChild(status);
+            setTimeout(() => { status.remove(); }, 5000);
+        }
+        
+        // 页面加载时同时触发云端同步和本地加载
+        (async function init() {
+            showLoadingStatus('🔄 正在加载数据...');
+            
+            // 尝试云端同步（不阻塞等待结果）
+            const cloudSuccess = await syncFromCloud();
+            
+            // 无论云端成功与否，都先显示本地/同步后的数据
+            loadData();
+            
+            if (cloudSuccess) {
+                showLoadingStatus('✅ 数据加载成功！');
+            } else {
+                showErrorStatus('⚠️ 云端同步失败，已使用本地数据');
+            }
+        })();
+        
+        async function syncFromCloud() {
             try {
                 console.log('开始加载云端数据...');
-                const response = await fetch(CLOUD_URL);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+                
+                const response = await fetch(CLOUD_URL, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
                 console.log('响应状态:', response.status);
                 
                 if (!response.ok) {
-                    console.log('云端响应失败，使用本地数据');
-                    return;
+                    console.log('云端响应失败');
+                    return false;
                 }
                 
                 const cloudData = await response.json();
                 console.log('云端数据加载成功:', cloudData);
                 
                 if (!cloudData || !Array.isArray(cloudData.weights)) {
-                    console.log('云端数据格式错误，使用空数据');
-                    cloudData = {weights:[],foods:[],exercises:[]};
+                    console.log('云端数据格式错误');
+                    return false;
                 }
                 
                 const localData = getData();
@@ -541,11 +573,18 @@
                 
                 console.log('合并后数据:', merged);
                 saveData(merged);
-                loadData(); // 刷新显示
+                return true;
             } catch(e) {
-                console.log('加载云端数据失败，使用本地数据', e);
-                loadData(); // 即使失败也加载本地数据
+                console.log('加载云端数据失败', e);
+                return false;
             }
+        }
+        
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
         }
         
         function exportData() {
@@ -583,9 +622,6 @@
                 alert('导入成功！');
             } catch(e) { alert('数据格式错误'); }
         }
-        
-        // 页面加载时尝试从云端同步
-        loadDataFromCloud();
         
         function getData() {
             const data = localStorage.getItem('healthTrackerData');
